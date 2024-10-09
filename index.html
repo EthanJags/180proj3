@@ -1,0 +1,392 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>CS 180 Project 3: Face Morphing</title>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+        <style>
+            :root {
+                --primary-color: #3498db;
+                --secondary-color: #2c3e50;
+                --background-color: #ecf0f1;
+                --text-color: #34495e;
+                --header-color: #2980b9;
+            }
+    
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+    
+            body {
+                font-family: 'Poppins', sans-serif;
+                line-height: 1.6;
+                color: var(--text-color);
+                background-color: var(--background-color);
+            }
+    
+            header {
+                background-color: var(--header-color);
+                color: white;
+                text-align: center;
+                padding: 2rem 0;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            }
+    
+            header h1 {
+                font-size: 2.5rem;
+                font-weight: 600;
+            }
+    
+            #toc {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 250px;
+                height: 100vh;
+                overflow-y: auto;
+                background-color: var(--secondary-color);
+                padding: 2rem 1rem;
+                color: white;
+                transition: transform 0.3s ease-in-out;
+            }
+    
+            #toc h2 {
+                font-size: 1.5rem;
+                margin-bottom: 1rem;
+                padding-bottom: 0.5rem;
+                border-bottom: 2px solid var(--primary-color);
+            }
+    
+            #toc ul {
+                list-style-type: none;
+            }
+    
+            #toc ul ul {
+                padding-left: 1rem;
+            }
+    
+            #toc a {
+                text-decoration: none;
+                color: #ecf0f1;
+                display: block;
+                padding: 0.5rem 0;
+                transition: color 0.3s ease;
+            }
+    
+            #toc a:hover {
+                color: var(--primary-color);
+            }
+    
+            main {
+                margin-left: 250px;
+                padding: 2rem;
+                max-width: 1200px;
+            }
+    
+            section {
+                background-color: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                padding: 2rem;
+                margin-bottom: 2rem;
+            }
+    
+            h2, h3 {
+                color: var(--primary-color);
+                margin-bottom: 1rem;
+            }
+    
+            h2 {
+                font-size: 2rem;
+                border-bottom: 2px solid var(--primary-color);
+                padding-bottom: 0.5rem;
+            }
+    
+            h3 {
+                font-size: 1.5rem;
+            }
+    
+            p {
+                margin-bottom: 1rem;
+            }
+    
+            .image-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 1rem;
+                justify-content: center;
+                margin-top: 1rem;
+            }
+    
+            .image-item {
+                flex-basis: calc(25% - 1rem);
+                background-color: white;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+    
+            .image-item:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            }
+    
+            .image-item img {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+    
+            .image-item p {
+                padding: 0.5rem;
+                text-align: center;
+                font-size: 0.9rem;
+            }
+    
+            footer {
+                background-color: var(--secondary-color);
+                color: white;
+                text-align: center;
+                padding: 1rem;
+                margin-top: 2rem;
+                margin-left: 250px;
+            }
+    
+            @media (max-width: 768px) {
+                #toc {
+                    transform: translateX(-100%);
+                }
+    
+                main, footer {
+                    margin-left: 0;
+                }
+    
+                .image-item {
+                    flex-basis: calc(50% - 1rem);
+                }
+            }
+    
+            #toc-toggle {
+                position: fixed;
+                left: 10px;
+                top: 10px;
+                z-index: 1000;
+                background-color: var(--primary-color);
+                color: white;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 5px;
+                cursor: pointer;
+                display: none;
+            }
+    
+            @media (max-width: 768px) {
+                #toc-toggle {
+                    display: block;
+                }
+            }
+
+            .author-name {
+                font-size: 1.2em;
+                font-weight: bold;
+                color: var(--primary-color);
+                margin-top: 0.5em;
+                margin-bottom: 0.2em;
+                text-align: center;
+            }
+
+        </style>
+    
+</head>
+<body>
+    <nav id="toc">
+        <h2>Table of Contents</h2>
+        <ul id="toc-list"></ul>
+    </nav>
+    <header>
+        <h1>CS 180 Project 3: Face Morphing</h1>
+        
+        <p class="author-name">By Ethan Jagoda</p>
+    </header>
+    <main>
+        <section>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="outputs/morph.gif" alt="Face Morphing Sequence">
+                </div>
+            </div>
+            <h2>Introduction</h2>
+            <p>This project explores how to smoothly morph between two images by warping the mesh of correspondence points of the two images and then cross-dissolving the colors. Through these two operations, the average face of a population can also be computed, as well as caricatures extrapolated from the average face.
+            </p>
+
+            <h2>Defining Correspondences</h2>
+            <p>To morph between two images, we first need to define a set of correspondences that define features between the two images. We can do this by hand, but for this project, I decided to try and automatically detect these corrspondences using a SIFT detector.</p>
+            <h3>Preprocessing the images</h3>
+            <p>To start, the faces of images could be very different sizes, as well as the image resolution and size.</p>
+            <p>To address this, I used a SIFT detector to find the "face box" of the image, I then added padding and cropped the image around the face box.</p>
+            <p>Next, to address the difference in image resolution and aspect ratio, I scaled the image to a preset aspect ratio and then resized the image.</p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="outputs/Subject.png" alt="original Ethan">
+                    <p>Original Ethan</p>
+                </div>
+                <div class="image-item">
+                    <img src="outputs/patrick mahomes.png" alt="original Mahomes">
+                    <p>Original Mahomes</p>
+                </div>
+                <div class="image-item">
+                    <img src="outputs/cropped_ethan.jpg" alt="Cropped Ethan">
+                    <p>Cropped Ethan</p>
+                </div>
+                <div class="image-item">
+                    <img src="outputs/cropped_mahomes.jpg" alt="Cropped Mahomes">
+                    <p>Cropped Mahomes</p>
+                </div>
+            </div>
+            <h3>Automating Feature Detection</h3>
+            <p>I used the same SIFT detector to find the correspondences between the two images. This outputs a set of key points.</p>
+            <img src="outputs/pointsEthanandMahomes.png" alt="SIFT Detector" style="width: 100%; height: auto;">
+            
+            <p>Brief description of the gradient magnitude computation: To calculate the gradient magnitude I simply summed the squares of the vertical and horizontal edge images, then square rooted them. This is similar to the L2 norm because light dims according to the inverse square law. I then used a threshold to binarize the image, setting all values greater than 0.1 to 1 and the rest to 0.</p>
+            
+            <h2>Computing the "Mid-way" Face</h2>
+            <h3>Approach</h3>
+            <div class="image-container">
+                    <img src="outputs/pointsandtriangles.png" alt="Points and Triangles" style="width: 100%; height: auto;">
+                    <p>Correspondence Points and Delaunay Triangulation</p>
+            </div>
+            <p>To compute the mid-way face, we first calculate the average shape by taking a weighted element-wise average of the correspondence points from both images. For the exact mid-way face, we use a weighting factor of 0.5.</p>
+            <p>Next, we use Delaunay triangulation (via scipy.spatial.Delaunay) on these average points to create a mesh of triangles. This mesh serves as the basis for our warping process.</p>
+            <p>For each triangle in the mesh, we compute an affine transformation that maps it from the average shape to its corresponding triangle in each original image. This is done by converting the points to homogeneous coordinates and solving a system of linear equations using np.linalg.solve.</p>
+            <p>To apply the warp, we iterate through each triangle in the average shape. For every pixel within a triangle (determined using skimage.draw.polygon), we apply the inverse of the affine transformation to find its corresponding position in the original image.</p>
+            <p>Finally, we use bilinear interpolation to determine the color of each warped pixel, sampling from the four nearest pixels in the original image. This process is repeated for both input images, creating two warped versions that align with the average shape.</p>
+            <p>The mid-way face is then created by blending these two warped images, typically using a simple average or cross-dissolve operation.</p>
+            <h3>Results</h3>
+            
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="outputs/mahomes_warped_into_ethan.jpg" alt="Average Face Warped into Ethan">
+                    <p>Mahomes Warped into Ethan</p>
+                </div>
+                <div class="image-item">
+                    <img src="outputs/ethan_warped_into_mahomes.jpg" alt="Ethan Warped into Average Face">
+                    <p>Ethan Warped into Mahomes</p>
+                </div>
+                <div class="image-item">
+                    <img src="outputs/morphed_midway_image.jpg" alt="Morphed Midway Face">
+                    <p>Morphed Midway Face</p>
+                </div>
+            </div>
+            <h2>The Morph Sequence</h2>
+            <h3>Approach</h3>
+            <p>To create a morph sequence, we extend our mid-way face technique to generate a series of intermediate images. Instead of using a fixed warping factor of 0.5, we vary it smoothly from 0 to 1 over the course of the sequence.</p>
+            <p>For each frame, we warp both source images to an intermediate shape determined by the current warping factor. This ensures that facial features align progressively throughout the transition.</p>
+            <p>After warping, we blend the pixel colors of the two aligned images using a dissolve factor. This factor also changes linearly from 0 to 1, creating a smooth transition in both shape and color.</p>
+            <p>By repeating this process with incrementally changing factors, we produce a sequence of images that smoothly morphs from the first face to the second.</p>
+            <p>I also threaded the operation of calculating each frame so that it would run in parallel and speed up the time it took. This brought down the average time to calculate 20 frames from ~33 seconds to ~17 seconds.</p>
+            <h3>Results</h3>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="outputs/morph.gif" alt="Face Morphing Sequence">
+                </div>
+            </div>
+<p></p>
+            <h2>The "Mean Face" of a population</h2>
+            <h3>Approach</h3>
+            <p>To compute the average face of a population, we first calculate the mean shape by averaging the positions of corresponding points across all faces. This creates a set of average landmarks that represent the typical facial structure of the group.</p>
+            <p>Using our previously established warping technique, we then transform each individual face in the population to align with this average shape. This process ensures that all facial features are properly aligned before we combine them.</p>
+            <p>Finally, we calculate the average color values for each pixel across all the warped faces. This step blends the textures and colors of all faces in the population, resulting in a composite image that represents the "mean face" of the group.</p>
+            <h3>Results</h3>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="outputs/cropped_average_face.jpg" alt="Mean Face">
+                    <p>Average Face</p>
+                </div>
+                <div class="image-item">
+                    <img src="outputs/average_warped_into_ethan.jpg" alt="Average Face Warped into Ethan">
+                    <p>Average Face Warped into Ethan</p>
+                </div>
+                <div class="image-item">
+                    <img src="outputs/ethan_warped_into_average.jpg" alt="Ethan Warped into Average Face">
+                    <p>Ethan Warped into Average Face</p>
+                </div>
+            </div>
+            <h2>Examples</h2>
+            <p>Here are some more examples of faces warped into the average face.</p>
+            <div class="image-container">
+                    <img src="outputs/examples.png" alt="Examples" style="width: 300%; height: auto;">
+            </div>
+            <h2>Caricatures: Extrapolating from the mean</h2>
+            <h3>Approach</h3>
+            <p>To create caricatures, we exaggerate the differences between an individual face and the average face of a population. We use the formula: caricature = scale * (individual - average) + average, where scale is greater than 1.0. This amplifies the unique features of the individual face.</p>
+            <p>Interestingly, this formula can be rearranged to: caricature = scale * individual + (1 - scale) * average. This is similar to the weighted average formula used in our previous warping techniques, but now the scale factor can exceed 1.0.</p>
+            <p>We apply this concept using our existing warping function, setting warp_frac to a value greater than 1 (e.g., 1.75) and dissolve_frac to 0.0. This exaggerates the individual's features relative to the average face.</p>
+            
+            <h3>Results</h3>
+            <p>The resulting caricature emphasizes the distinctive features of the individual face compared to the population average. For example, if a person has slightly larger eyes than average, the caricature will make them significantly larger. Similarly, other facial features like nose width, mouth shape, or eyebrow position may be exaggerated based on how they differ from the average.</p>
+            <div class="image-container">
+                <img src="outputs/caricature.jpg" alt="Caricature 1" style="width: 20%; height: auto;">
+            </div>
+            
+
+            <h2>Bells & Whistles</h2>
+            <h3>Music Video</h3>
+
+            <p>As a fun addition to this project, I created a music video using the face morphing technique. The video showcases a smooth transition between various faces, synchronized with music.</p>
+            <div class="video-container">
+                <iframe width="560" height="315" src="https://www.youtube.com/embed/_0WSRxuCw2A" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+            <p>This video demonstrates the practical application of the face morphing algorithm in creating engaging visual content.</p>
+            <h3>Other Bells & Whistles</h3>
+            <ul>
+                <li style="list-style-position: inside; padding-left: 20px;">Automatice Face Detection and Cropping</li>
+                <li style="list-style-position: inside; padding-left: 20px;">Automatic Feature Detection and Corrspondence Generation</li>
+            </ul>
+        </section>
+    </main>
+    
+    <footer>
+        <p>2024 Ethan Jagoda - CS180 Project 2</p>
+    </footer>
+    <script>
+        // JavaScript to generate the table of contents
+        document.addEventListener('DOMContentLoaded', function() {
+            const tocList = document.getElementById('toc-list');
+            const headers = document.querySelectorAll('h2, h3');
+            
+            headers.forEach(function(header, index) {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                
+                // Create an id for the header if it doesn't have one
+                if (!header.id) {
+                    header.id = 'toc-' + index;
+                }
+                
+                a.href = '#' + header.id;
+                a.textContent = header.textContent;
+                
+                li.appendChild(a);
+                
+                if (header.tagName === 'H2') {
+                    tocList.appendChild(li);
+                } else if (header.tagName === 'H3') {
+                    let lastH2Li = tocList.lastElementChild;
+                    let ul = lastH2Li.querySelector('ul');
+                    if (!ul) {
+                        ul = document.createElement('ul');
+                        lastH2Li.appendChild(ul);
+                    }
+                    ul.appendChild(li);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
